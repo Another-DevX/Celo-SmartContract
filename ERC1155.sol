@@ -74,15 +74,6 @@ contract MyToken is ERC1155, Ownable, ERC1155Supply {
         _mint(account, id, amount, "");
     }
 
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public onlyOwner {
-        _mintBatch(to, ids, amounts, data);
-    }
-
     function uri(uint256 _id) public view virtual override returns(string memory){
         require(exists(_id),"Invalid ID");
         return string(abi.encodePacked(super.uri(_id), Strings.toString(_id), ".json"));
