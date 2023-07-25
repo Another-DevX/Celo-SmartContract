@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract MyToken is ERC1155, Ownable, ERC1155Supply {
     struct args {
@@ -14,11 +14,16 @@ contract MyToken is ERC1155, Ownable, ERC1155Supply {
         uint256 price;
     }
     mapping(string => args) private Collection;
+    address CUsd = 0x765DE816845861e75A25fCA122bb6898B8B1282a;
 
-    constructor() ERC1155("https://ipfs.io/ipfs/bafybeich7u4lv2zue2cqsxgqhtukdpwknjlftzng4on7tzx2tzyaw4caj4/") {
-        Collection["Legendary"] = args(1, 10, 0.1 ether);
-        Collection["Rare"] = args(5, 50, 0.05 ether);
-        Collection["Common"] = args(10, 100, 0.02 ether);
+    constructor()
+        ERC1155(
+            "https://ipfs.io/ipfs/bafybeich7u4lv2zue2cqsxgqhtukdpwknjlftzng4on7tzx2tzyaw4caj4/"
+        )
+    {
+        Collection["Legendary"] = args(1, 10, 100);
+        Collection["Rare"] = args(5, 50, 25);
+        Collection["Common"] = args(10, 100, 1);
     }
 
     function mint(
@@ -38,13 +43,17 @@ contract MyToken is ERC1155, Ownable, ERC1155Supply {
                 "Cannot mint that ammount of nfts"
             );
             require(
-                msg.value >= Collection["Legendary"].price * amount,
+                IERC20(CUsd).balanceOf(msg.sender) >=
+                    Collection["Legendary"].price * amount,
                 "Insuficent amount"
+            );
+            IERC20(CUsd).transfer(
+                address(this),
+                Collection["Legendary"].price * amount
             );
         } else if (id <= 12) {
             require(
-                balanceOf(msg.sender, id) <
-                    Collection["Rare"].maxPerWallet,
+                balanceOf(msg.sender, id) < Collection["Rare"].maxPerWallet,
                 "You have the limit of this NFTS"
             );
             require(
@@ -52,13 +61,17 @@ contract MyToken is ERC1155, Ownable, ERC1155Supply {
                 "Cannot mint that ammount of nfts"
             );
             require(
-                msg.value >= Collection["Rare"].price * amount,
+                IERC20(CUsd).balanceOf(msg.sender) >=
+                    Collection["Rare"].price * amount,
                 "Insuficent amount"
+            );
+            IERC20(CUsd).transfer(
+                address(this),
+                Collection["Rare"].price * amount
             );
         } else if (id <= 18) {
             require(
-                balanceOf(msg.sender, id) <
-                    Collection["Common"].maxPerWallet,
+                balanceOf(msg.sender, id) < Collection["Common"].maxPerWallet,
                 "You have the limit of this NFTS"
             );
             require(
@@ -66,17 +79,31 @@ contract MyToken is ERC1155, Ownable, ERC1155Supply {
                 "Cannot mint that ammount of nfts"
             );
             require(
-                msg.value >= Collection["Common"].price * amount,
+                IERC20(CUsd).balanceOf(msg.sender) >=
+                    Collection["Common"].price * amount,
                 "Insuficent amount"
+            );
+            IERC20(CUsd).transfer(
+                address(this),
+                Collection["Common"].price * amount
             );
         }
 
         _mint(account, id, amount, "");
     }
 
-    function uri(uint256 _id) public view virtual override returns(string memory){
-        require(exists(_id),"Invalid ID");
-        return string(abi.encodePacked(super.uri(_id), Strings.toString(_id), ".json"));
+    function uri(uint256 _id)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        require(exists(_id), "Invalid ID");
+        return
+            string(
+                abi.encodePacked(super.uri(_id), Strings.toString(_id), ".json")
+            );
     }
 
     // The following functions are overrides required by Solidity.
